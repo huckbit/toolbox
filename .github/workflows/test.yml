@@ -1,0 +1,47 @@
+name: Run Code Tests
+
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  run-tests:
+    runs-on: ubuntu-latest
+
+    services:
+      # Spin up a temporary Postgres database inside GitHub's cloud runner for testing
+      postgres-db:
+        image: postgres:16
+        env:
+          POSTGRES_DB: test_toolbox
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
+        ports:
+          - 5432:5432
+        # Ensure postgres is ready before starting the tests
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout repository code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Tests with Pytest
+        env:
+          # Point the app to our temporary cloud test database instead of local Docker
+          DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_toolbox
+        run: |
+          pytest
