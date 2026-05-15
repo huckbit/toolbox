@@ -43,3 +43,5 @@ To run the automated test suite and ensure everything is configured correctly:
 ```bash
 docker compose exec web pytest
 ```
+
+![Build Status](https://github.com/huckbit/toolbox/actions/workflows/test.yml/badge.svg?branch=new-changes)
